@@ -29,7 +29,7 @@ const (
 )
 
 var (
-	confAllGuildsPremium = config.RegisterOption("yagpdb.premium.all_guilds_premium", "All servers have premium", false)
+	confAllGuildsPremium = config.RegisterOption("yagpdb.premium.all_guilds_premium", "All servers have premium", true)
 )
 
 var logger = common.GetPluginLogger(&Plugin{})
