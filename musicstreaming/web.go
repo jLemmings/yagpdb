@@ -27,7 +27,7 @@ var panelLogKey = cplogs.RegisterActionFormat(&cplogs.ActionFormat{Key: "musicst
 
 func (p *Plugin) InitWeb() {
 	web.LoadHTMLTemplate("../../musicstreaming/assets/musicstreaming.html", "templates/plugins/musicstreaming.html")
-	web.AddSidebarItem(web.SidebarCategoryFeeds, &web.SidebarItem{
+	web.AddSidebarItem(web.SidebarCategoryFun, &web.SidebarItem{
 		Name: "MusicStreaming",
 		URL:  "musicstreaming",
 		Icon: "fas fa-video",
