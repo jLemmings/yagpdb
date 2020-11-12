@@ -20,7 +20,7 @@ import (
 	"github.com/mediocregopher/radix/v3"
 )
 
-func KeyCurrentlyStreaming(gID int64) string { return "currently_streaming:" + discordgo.StrID(gID) }
+func KeyCurrentlyStreaming(gID int64) string { return "currently_musicstreaming:" + discordgo.StrID(gID) }
 
 var _ bot.BotInitHandler = (*Plugin)(nil)
 
@@ -28,12 +28,12 @@ func (p *Plugin) BotInit() {
 	eventsystem.AddHandlerAsyncLastLegacy(p, bot.ConcurrentEventHandler(HandleGuildCreate), eventsystem.EventGuildCreate)
 	eventsystem.AddHandlerAsyncLast(p, HandlePresenceUpdate, eventsystem.EventPresenceUpdate)
 	eventsystem.AddHandlerAsyncLast(p, HandleGuildMemberUpdate, eventsystem.EventGuildMemberUpdate)
-	pubsub.AddHandler("update_streaming", HandleUpdateStreaming, nil)
+	pubsub.AddHandler("update_musicstreaming", HandleUpdateStreaming, nil)
 }
 
 // YAGPDB event
 func HandleUpdateStreaming(event *pubsub.Event) {
-	logger.Info("Received update streaming event ", event.TargetGuild)
+	logger.Info("Received update music streaming event ", event.TargetGuild)
 
 	gs := bot.State.Guild(true, event.TargetGuildInt)
 	if gs == nil {
@@ -49,7 +49,7 @@ func CheckGuildFull(gs *dstate.GuildState, fetchMembers bool) {
 
 	config, err := GetConfig(gs.ID)
 	if err != nil {
-		logger.WithError(err).WithField("guild", gs.ID).Error("Failed retrieving streaming config")
+		logger.WithError(err).WithField("guild", gs.ID).Error("Failed retrieving music streaming config")
 		return
 	}
 
@@ -174,7 +174,7 @@ func HandleGuildCreate(evt *eventsystem.EventData) {
 
 	config, err := GetConfig(g.ID)
 	if err != nil {
-		logger.WithError(err).Error("Failed retrieving streaming config")
+		logger.WithError(err).Error("Failed retrieving music streaming config")
 		return
 	}
 
@@ -269,7 +269,7 @@ func CheckPresenceSparse(client radix.Client, config *Config, p *discordgo.Prese
 			return nil
 		}
 
-		// Send the streaming announcement if enabled
+		// Send the music streaming announcement if enabled
 		if config.AnnounceChannel != 0 && config.AnnounceMessage != "" {
 			ms, err := bot.GetMember(gs.ID, p.User.ID)
 			if err != nil {
@@ -280,7 +280,7 @@ func CheckPresenceSparse(client radix.Client, config *Config, p *discordgo.Prese
 		}
 
 	} else {
-		// Not streaming
+		// Not music streaming
 		RemoveStreaming(client, config, gs.ID, p.User.ID, p.Roles)
 	}
 
@@ -329,13 +329,13 @@ func CheckPresence(client radix.Client, config *Config, ms *dstate.MemberState, 
 			return nil
 		}
 
-		// Send the streaming announcement if enabled
+		// Send the music streaming announcement if enabled
 		if config.AnnounceChannel != 0 && config.AnnounceMessage != "" {
 			SendStreamingAnnouncement(config, gs, ms)
 		}
 
 	} else {
-		// Not streaming
+		// Not music streaming
 		RemoveStreaming(client, config, gs.ID, ms.ID, ms.Roles)
 	}
 
@@ -388,7 +388,7 @@ func RemoveStreaming(client radix.Client, config *Config, guildID int64, memberI
 	client.Do(radix.FlatCmd(nil, "SREM", KeyCurrentlyStreaming(guildID), memberID))
 	go RemoveStreamingRole(guildID, memberID, config.GiveRole, currentRoles)
 
-	// Was not streaming before if we removed 0 elements
+	// Was not music streaming before if we removed 0 elements
 	// var removed bool
 	// client.Do(radix.FlatCmd(&removed, "SREM", KeyCurrentlyStreaming(guildID), memberID))
 	// if removed && config.GiveRole != 0 {
@@ -399,15 +399,15 @@ func RemoveStreaming(client radix.Client, config *Config, guildID int64, memberI
 func SendStreamingAnnouncement(config *Config, guild *dstate.GuildState, ms *dstate.MemberState) {
 	// Only send one announcment every 1 hour
 	var resp string
-	key := fmt.Sprintf("streaming_announcement_sent:%d:%d", guild.ID, ms.ID)
+	key := fmt.Sprintf("musicstreaming_announcement_sent:%d:%d", guild.ID, ms.ID)
 	err := common.RedisPool.Do(radix.Cmd(&resp, "SET", key, "1", "EX", "3600", "NX"))
 	if err != nil {
-		logger.WithError(err).Error("failed setting streaming announcment cooldown")
+		logger.WithError(err).Error("failed setting music streaming announcment cooldown")
 		return
 	}
 
 	if resp != "OK" {
-		logger.Info("streaming announcment cooldown: ", ms.ID)
+		logger.Info("music streaming announcment cooldown: ", ms.ID)
 		return
 	}
 
@@ -424,11 +424,11 @@ func SendStreamingAnnouncement(config *Config, guild *dstate.GuildState, ms *dst
 		config.AnnounceChannel = 0
 		config.Save(guild.ID)
 
-		logger.WithField("guild", guild.ID).WithField("channel", config.AnnounceChannel).Warn("Channel not found in state, not sending streaming announcement")
+		logger.WithField("guild", guild.ID).WithField("channel", config.AnnounceChannel).Warn("Channel not found in state, not sending music streaming announcement")
 		return
 	}
 
-	go analytics.RecordActiveUnit(guild.ID, &Plugin{}, "sent_streaming_announcement")
+	go analytics.RecordActiveUnit(guild.ID, &Plugin{}, "sent_music_announcement")
 
 	ctx := templates.NewContext(guild, nil, ms)
 	ctx.Data["URL"] = ms.PresenceGame.URL
