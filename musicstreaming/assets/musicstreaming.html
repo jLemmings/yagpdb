@@ -1,4 +1,4 @@
-{{define "cp_streaming"}}
+{{define "cp_musicstreaming"}}
 
 {{template "cp_head" .}}
 <header class="page-header">
@@ -13,7 +13,7 @@
         <sction class="card {{if .StreamingConfig.Enabled}}card-featured card-featured-success{{end}}">
             <form method="post" data-async-form>
                 <header class="card-header">
-                    {{checkbox "enabled" "streaming-enabled-check" `<h2 class="card-title">Enable</h2>` .StreamingConfig.Enabled}}
+                    {{checkbox "enabled" "musicstreaming-enabled-check" `<h2 class="card-title">Enable</h2>` .StreamingConfig.Enabled}}
                 </header>
                 <div class="card-body">
                     <div class="row">
